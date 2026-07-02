@@ -62,7 +62,7 @@ while True:
     # Collision detection
     distance_sq = (cx - start)**2 + (cy-ran1)**2
 
-    if distance_sq < size**2 or cx >= 20 or cy >= 10 or cx <= -20 or cy <= -10:
+    if distance_sq < size**2 or cx >= 20 or cy >= 12 or cx <= -20 or cy <= -12:
         sys.stdout.write("\033[H\033[0J")
         sys.stdout.write("GAME OVER\n")
         sys.stdout.flush()
@@ -95,5 +95,5 @@ while True:
 
     # Program keeps running un-interrupted (simulation step)
     # Adjust this delay to control frame rate and movement responsiveness
-    time.sleep(0.03) 
+    time.sleep(0.016) 
     start -= delta_time
