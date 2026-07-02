@@ -13,7 +13,7 @@ height = 20
 score = 0
 
 # Initial center coordinates of the circle
-cx = 0.0
+cx = -8
 cy = 0.0
 
 # Movement speed modifier
@@ -30,6 +30,7 @@ print("Use WASD to move the circle. Press 'q' to quit.")
 time.sleep(2)
 start = 30
 size = 1
+size1 = 1
 ran1 = random.randint(-9,9)
 while True:
     # Check held keys every frame instead of waiting for a keypress event
@@ -38,9 +39,11 @@ while True:
     if key_down('S'):
         cy -= speed * delta_time 
     if key_down('A'):
-        cx -= speed * delta_time
+        if size1 > 1:
+            size1 -= 0.5
     if key_down('D'):
-        cx += speed * delta_time 
+        if size1 < 6:
+            size1 += 0.5
     if key_down('Q'):
         break
     
@@ -48,11 +51,10 @@ while True:
     if start <= -30:
         start = 30
         ran1 = random.randint(-9,9) 
+        size = random.randint(1,6)
         score += 1
         if delta_time < 1:
             delta_time += 0.1
-        if size < 6:
-            size += 1
     # Clear the screen and reset cursor using ANSI escape codes
     # \033[H moves cursor to top-left; \033[J clears down from the cursor
     sys.stdout.write("\033[H")
@@ -61,8 +63,10 @@ while True:
 
     # Collision detection
     distance_sq = (cx - start)**2 + (cy-ran1)**2
-
-    if distance_sq < size**2 or cx >= 20 or cy >= 12 or cx <= -20 or cy <= -12:
+    player_radius = (size1 + 1) ** 0.5
+    obstacle_radius = size ** 0.5
+    combined_radius = player_radius + obstacle_radius
+    if distance_sq < combined_radius**2 or cy >= 11 or cy <= -11:
         sys.stdout.write("\033[H\033[0J")
         sys.stdout.write("GAME OVER\n")
         sys.stdout.flush()
@@ -78,7 +82,7 @@ while True:
         for col in range(width):
             x = (col - (width - 1) / 2) / 2
             # Player
-            if (x - cx)**2 + (y - cy)**2 < size+1:
+            if (x - cx)**2 + (y - cy)**2 < size1+1:
                 output.append("*")
             # Obstacle
             elif (x - start)**2 + (y-ran1)**2 < size:
