@@ -1,5 +1,6 @@
-import msvcrt
+import ctypes
 import time
+import sys
 import os
 import random
 
@@ -9,6 +10,7 @@ score = 0
 # Screen dimensions
 width = 40
 height = 20
+score = 0
 
 # Initial center coordinates of the circle
 cx = 0.0
@@ -17,48 +19,56 @@ cy = 0.0
 # Movement speed modifier
 speed = 2
 delta_time = 0.3
+def key_down(key):
+    # Returns True if the key is currently being held
+    return ctypes.windll.user32.GetAsyncKeyState(ord(key)) & 0x8000 != 0
+def flush_input():
+    kernel32 = ctypes.windll.kernel32
+    handle = kernel32.GetStdHandle(-10)  # STD_INPUT_HANDLE
+    kernel32.FlushConsoleInputBuffer(handle)
 print("Use WASD to move the circle. Press 'q' to quit.")
 time.sleep(2)
 start = 30
-size = random.randint(1,3)
+size = 1
 ran1 = random.randint(-9,9)
 while True:
-    # Check for non-blocking user input
-    if msvcrt.kbhit():
-        # Get the pressed key (lowercase)
-        key = msvcrt.getch().decode('utf-8').lower()
-        
-        # Update center coordinates based on input
-        if key == 'w':
-            cy += speed    # Move Up
-        elif key == 's':
-            cy -= speed    # Move Down
-        elif key == 'a':
-            cx -= speed    # Move Left
-        elif key == 'd':
-            cx += speed    # Move Right
-        elif key == 'q':
-            break          # Quit program
+    # Check held keys every frame instead of waiting for a keypress event
+    if key_down('W'):
+        cy += speed * delta_time    
+    if key_down('S'):
+        cy -= speed * delta_time 
+    if key_down('A'):
+        cx -= speed * delta_time
+    if key_down('D'):
+        cx += speed * delta_time 
+    if key_down('Q'):
+        break
     
     # Randomize and change speed
     if start <= -30:
         start = 30
         ran1 = random.randint(-9,9) 
-        size = random.randint(1,3)
-        if delta_time < 0.8:
+        score += 1
+        if delta_time < 1:
             delta_time += 0.1
-
+        if size < 6:
+            size += 1
     # Clear the screen and reset cursor using ANSI escape codes
     # \033[H moves cursor to top-left; \033[J clears down from the cursor
-    print("\033[H\033[J", end="")
+    sys.stdout.write("\033[H")
     # Draw the frame using your mathematical grid logic
     output = []
 
     # Collision detection
     distance_sq = (cx - start)**2 + (cy-ran1)**2
 
-    if distance_sq < size**2 or cx == 20 or cy == 10 or cx == -20 or cy == -10:
-        print("GAME OVER")
+    if distance_sq < size**2 or cx >= 20 or cy >= 10 or cx <= -20 or cy <= -10:
+        sys.stdout.write("\033[H\033[0J")
+        sys.stdout.write("GAME OVER\n")
+        sys.stdout.flush()
+        sys.stdout.write("Score:")
+        sys.stdout.write(str(score))
+        flush_input()
         check = True
         break
 
@@ -80,7 +90,8 @@ while True:
         output.append("\n")   
         
     # Print the entire frame at once to reduce screen flicker
-    print("".join(output), end="", flush=True)
+    sys.stdout.write("\033[H\033[0J" + "".join(output))
+    sys.stdout.flush()
 
     # Program keeps running un-interrupted (simulation step)
     # Adjust this delay to control frame rate and movement responsiveness
